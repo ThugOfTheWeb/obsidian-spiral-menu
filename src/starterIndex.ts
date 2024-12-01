@@ -1,130 +1,44 @@
-import { App, ItemView, Platform, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from 'obsidian';
-
-import DiceRoller from "./ui/DiceRoller.svelte";
-
-const VIEW_TYPE = "svelte-view";
-
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-    mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-    mySetting: 'default'
-};
-
-
-class MySvelteView extends ItemView {
-    private component: DiceRoller | null = null;
-
-    constructor(leaf: WorkspaceLeaf) {
-        super(leaf);
-    }
-
-    getViewType(): string {
-        return VIEW_TYPE;
-    }
-
-    getDisplayText(): string {
-        return "Dice Roller";
-    }
-
-    getIcon(): string {
-        return "dice";
-    }
-
-    async onOpen(): Promise<void> {
-        this.component = new DiceRoller({target: this.contentEl, props: {}});
-    }
-}
+import { Plugin } from 'obsidian';
+import { HelloWorldView, VIEW_TYPE_HELLO_WORLD } from './HWView';
 
 export default class MyPlugin extends Plugin {
-    private view: MySvelteView | null = null;
-    settings: MyPluginSettings = DEFAULT_SETTINGS;
-
     async onload() {
-        await this.loadSettings();
+        console.log('Loading MyPlugin...');
 
         this.registerView(
-            VIEW_TYPE,
-            (leaf: WorkspaceLeaf) => (this.view = new MySvelteView(leaf))
+            VIEW_TYPE_HELLO_WORLD,
+            (leaf) => new HelloWorldView(leaf)
         );
 
-        this.app.workspace.onLayoutReady(this.onLayoutReady.bind(this));
-
-        // This creates an icon in the left ribbon.
-        this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => this.openMapView());
-
-        // This adds a simple command that can be triggered anywhere
+        // Add command to open the Hello World view
         this.addCommand({
-            id: 'open-sample-modal-simple',
-            name: 'Open sample modal (simple)',
-            callback: () => this.openMapView(),
+            id: 'open-hello-world-view',
+            name: 'Open Hello World View',
+            callback: () => {
+                this.activateView();
+            }
         });
-        // This adds a settings tab so the user can configure various aspects of the plugin
-        this.addSettingTab(new SampleSettingTab(this.app, this));
+
+        // You can open the view automatically if needed
+        // this.activateView();
     }
 
-    onLayoutReady(): void {
-        if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length) {
-            this.app.workspace.rightSplit.collapsed && this.app.workspace.rightSplit.toggle(true);
-            return;
+    async activateView() {
+        this.app.workspace.detachLeavesOfType(VIEW_TYPE_HELLO_WORLD);
+
+        const rightLeaf = this.app.workspace.getRightLeaf(false);
+        if (rightLeaf) {
+            await rightLeaf.setViewState({
+                type: VIEW_TYPE_HELLO_WORLD,
+                active: true,
+            });
         }
-        this.app.workspace.getRightLeaf(false)?.setViewState({
-            type: VIEW_TYPE,
-        });
-        this.app.workspace.rightSplit.collapsed && this.app.workspace.rightSplit.toggle(true);
+        this.app.workspace.revealLeaf(
+            this.app.workspace.getLeavesOfType(VIEW_TYPE_HELLO_WORLD)[0]
+        );
     }
 
     onunload() {
-
-    }
-
-    async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    }
-
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
-
-    async openMapView() {
-        const workspace = this.app.workspace;
-        workspace.detachLeavesOfType(VIEW_TYPE);
-        const leaf = workspace.getLeaf(
-            // @ts-ignore
-            !Platform.isMobile
-        );
-        await leaf.setViewState({type: VIEW_TYPE});
-        workspace.revealLeaf(leaf);
-    }
-}
-
-class SampleSettingTab extends PluginSettingTab {
-    plugin: MyPlugin;
-
-    constructor(app: App, plugin: MyPlugin) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
-
-    display(): void {
-        const {containerEl} = this;
-
-        containerEl.empty();
-
-        containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
-
-        new Setting(containerEl)
-            .setName('Setting #1')
-            .setDesc('It\'s a secret')
-            .addText(text => text
-                .setPlaceholder('Enter your secret')
-                .setValue(this.plugin.settings.mySetting)
-                .onChange(async (value) => {
-                    this.plugin.settings.mySetting = value;
-                    await this.plugin.saveSettings();
-                }));
+        this.app.workspace.detachLeavesOfType(VIEW_TYPE_HELLO_WORLD);
     }
 }
