@@ -1,44 +1,38 @@
-import { Plugin } from 'obsidian';
-import { HelloWorldView, VIEW_TYPE_HELLO_WORLD } from './HWView';
-
-export default class MyPlugin extends Plugin {
+import { Plugin } from "obsidian";
+import SlidingView, { SLIDING_VIEW_ID } from "./views/SlidingView";
+export default class ShootingStarMenu extends Plugin {
     async onload() {
-        console.log('Loading MyPlugin...');
+        console.log("Plugin loaded!");
 
         this.registerView(
-            VIEW_TYPE_HELLO_WORLD,
-            (leaf) => new HelloWorldView(leaf)
+            SLIDING_VIEW_ID,
+            (leaf) => new SlidingView(leaf)
         );
-
-        // Add command to open the Hello World view
         this.addCommand({
-            id: 'open-hello-world-view',
-            name: 'Open Hello World View',
-            callback: () => {
-                this.activateView();
-            }
-        });
+            id: "open-sliding-view",
+            name: "Open Sliding View",
+            checkCallback: (checking: boolean) => {
+                const leaves = this.app.workspace.getLeavesOfType(SLIDING_VIEW_ID);
+                if (leaves.length > 0) {
+                    if (!checking) {
+                        this.app.workspace.detachLeavesOfType(SLIDING_VIEW_ID);
+                    }
+                    return true;
+                } else {
+                    if (!checking) {
+                        const leaf = this.app.workspace.getRightLeaf(true);
+                        leaf?.setViewState({ type: SLIDING_VIEW_ID, active: true });
+                    }
+                    return true;
+                }
 
-        // You can open the view automatically if needed
-        // this.activateView();
-    }
-
-    async activateView() {
-        this.app.workspace.detachLeavesOfType(VIEW_TYPE_HELLO_WORLD);
-
-        const rightLeaf = this.app.workspace.getRightLeaf(false);
-        if (rightLeaf) {
-            await rightLeaf.setViewState({
-                type: VIEW_TYPE_HELLO_WORLD,
-                active: true,
-            });
-        }
-        this.app.workspace.revealLeaf(
-            this.app.workspace.getLeavesOfType(VIEW_TYPE_HELLO_WORLD)[0]
-        );
+            },
+        })
     }
 
     onunload() {
-        this.app.workspace.detachLeavesOfType(VIEW_TYPE_HELLO_WORLD);
+        this.app.workspace.detachLeavesOfType(SLIDING_VIEW_ID);
+
+        console.log("Plugin unloaded!");
     }
 }
