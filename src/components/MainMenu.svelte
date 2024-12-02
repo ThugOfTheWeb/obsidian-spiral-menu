@@ -2,15 +2,15 @@
     let isOpen = false;
 
     const buttonPositions = [
-        { angle: -66, radius: 180 }, // Button 1
-        { angle: -34, radius: 165 }, // Button 2
-        { angle: -0, radius: 160 }, // Button 3
-        { angle: -18, radius: 240 }, // Button 4
-        { angle: -50, radius: 270 }, // Button 5
-        { angle: -77, radius: 300 }, // Button 6
-        { angle: -82, radius: 400 }, // Button 7
-        { angle: -60, radius: 375 }, // Button 8
-        { angle: -30, radius: 330 }, // Button 9
+        { angle: -66, radius: 180 },
+        { angle: -34, radius: 165 },
+        { angle: 0, radius: 160 },
+        { angle: -18, radius: 240 },
+        { angle: -50, radius: 270 },
+        { angle: -77, radius: 300 },
+        { angle: -82, radius: 400 },
+        { angle: -60, radius: 375 },
+        { angle: -30, radius: 330 },
     ];
 
     // Toggles menu visibility
@@ -20,7 +20,7 @@
 
     // Handles button click behavior
     function handleButtonClick(index) {
-        alert(`Button ${index + 1} clicked!`);
+        console.log(`Button ${index + 1} clicked!`);
         toggleMenu(); // Close the menu after a button is clicked
     }
 </script>
@@ -33,20 +33,15 @@
 
     <!-- Menu Buttons -->
     {#each buttonPositions as { angle, radius }, index}
-    <button
-        class="menu-button"
-        style={`
-            --angle: ${angle}deg;
-            --radius: ${radius}px;
-            visibility: ${isOpen ? 'visible' : 'hidden'};
-            opacity: ${isOpen ? 1 : 0};
-        `}
-        class:is-open={isOpen}
-        on:click={() => handleButtonClick(index)}
-    >
-        {index + 1}
-    </button>
-{/each}
+        <button
+            class="menu-button"
+            style={`--angle: ${angle}deg; --radius: ${radius}px;`}
+            class:is-open={isOpen}
+            on:click={() => handleButtonClick(index)}
+        >
+            {index + 1}
+        </button>
+    {/each}
 </div>
 
 <style>
@@ -93,11 +88,18 @@
         transition: opacity 0.3s ease, visibility 0.3s ease;
         z-index: 5;
         pointer-events: none;
+        visibility: hidden;
     }
 
     .menu-button.is-open {
-        animation: circlePath 0.6s ease-out forwards;
+        animation: circlePath 0.5s ease-out forwards;
         pointer-events: auto;
+        visibility: visible;
+    }
+
+    .menu-button {
+        animation: circlePathReverse 0.5s ease-in-out forwards;
+        pointer-events: none;
     }
 
     @keyframes circlePath {
@@ -110,5 +112,15 @@
                 translateX(var(--radius)) rotate(0deg);
         }
     }
-    
+
+    @keyframes circlePathReverse {
+        from {
+            transform: translate(-50%, -50%) rotate(var(--angle))
+                translateX(var(--radius)) rotate(0deg);
+        }
+        to {
+            transform: translate(-50%, -50%) rotate(0deg) translateX(0px)
+                rotate(0deg);
+        }
+    }
 </style>
